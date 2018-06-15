@@ -1,0 +1,29 @@
+// Cpp Tests stage
+def run(configuration, utils) {
+
+    final TARGET_CONFIG = "--target=${configuration}"
+    String testReportPath = utils.constructTestReportPath(configuration, LABEL_CPP_TESTS)
+    def postCompile = '--no-post-compile'
+    if (env.BRANCH_NAME.endsWith('-head')) {
+        postCompile = ''
+    }
+
+    timeout(time: TIMEOUT_LENGTH_XSMALL * PROP_CPP_BLASTER, unit: 'MINUTES') {
+        try {
+            stageResults.update(utils.platform, configuration, 'cpp', true) {
+                PROP_CPP_BLASTER.times {
+                utils.grunt 'test', ['--cpp', '--no-build', postCompile, '--junit=${testReportPath}', TARGET_CONFIG]
+                }
+            }
+        } catch(e) {
+            utils.stageFailedSlackMessage(env, default_channel, _slackStageFailed, utils.platform, configuration, 'cpp test')
+            _slackStageFailed = true
+            _showIFrame = true
+            throw e
+        } finally {
+            _buildDescription += utils.finallyBlock("CPP", testReportPath, configuration)
+        }
+   }
+}
+
+return this

@@ -1,0 +1,19 @@
+def execute() {
+   node() {
+       String revision = stage('Checkout') {
+           return "checkout"
+       }
+       gitlabBuilds(builds: ["build", "test"]) {
+           stage("build") {
+               echo "build"
+           }
+
+           stage("test") {
+               echo "test"
+               sh "git --test"
+           }
+       }
+   }
+}
+
+return this
